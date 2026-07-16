@@ -1,0 +1,163 @@
+name: Deploy LifeQuest
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lifequest-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Test, build and deploy
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
+
+    env:
+      SSH_HOST: ${{ secrets.HOSTIDO_HOST }}
+      SSH_PORT: ${{ secrets.HOSTIDO_PORT }}
+      SSH_USER: ${{ secrets.HOSTIDO_USER }}
+      REMOTE_ARCHIVE: tmp/lifequest-${{ github.run_id }}-${{ github.run_attempt }}.tar.gz
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build production application
+        run: npm run build
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run end-to-end tests
+        run: npm run e2e
+
+      - name: Package build
+        run: tar -czf "$RUNNER_TEMP/lifequest.tar.gz" -C dist .
+
+      - name: Configure SSH
+        shell: bash
+        run: |
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "${{ secrets.HOSTIDO_SSH_KEY }}" > "$HOME/.ssh/lifequest_deploy"
+          chmod 600 "$HOME/.ssh/lifequest_deploy"
+          printf '%s\n' "${{ secrets.HOSTIDO_KNOWN_HOSTS }}" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Upload release package
+        shell: bash
+        run: |
+          ssh -i "$HOME/.ssh/lifequest_deploy" -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "mkdir -p tmp"
+          scp -i "$HOME/.ssh/lifequest_deploy" -P "$SSH_PORT" \
+            "$RUNNER_TEMP/lifequest.tar.gz" \
+            "$SSH_USER@$SSH_HOST:$REMOTE_ARCHIVE"
+
+      - name: Activate release atomically
+        id: activate
+        shell: bash
+        run: |
+          ssh -i "$HOME/.ssh/lifequest_deploy" -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "bash -s -- '${{ github.run_id }}-${{ github.run_attempt }}' '$REMOTE_ARCHIVE'" <<'REMOTE_SCRIPT'
+          set -Eeuo pipefail
+
+          release_id="$1"
+          archive="$HOME/$2"
+          domain_root="$HOME/domains/lifequest.develith.com"
+          live="$domain_root/public_html"
+          release="$domain_root/.deploy-$release_id"
+          previous="$domain_root/.previous-$release_id"
+          backups="$HOME/backups/deployments/lifequest"
+          active_marker="$domain_root/.active-$release_id"
+
+          cleanup_failed_release() {
+            rm -rf "$release"
+            rm -f "$archive"
+          }
+          trap cleanup_failed_release ERR
+
+          mkdir -p "$release" "$backups"
+          tar -xzf "$archive" -C "$release"
+          test -f "$release/index.html"
+
+          if [ -d "$live" ]; then
+            tar -czf "$backups/before-$release_id.tar.gz" -C "$live" .
+            mv "$live" "$previous"
+          fi
+
+          if ! mv "$release" "$live"; then
+            if [ -d "$previous" ]; then
+              mv "$previous" "$live"
+            fi
+            exit 1
+          fi
+
+          touch "$active_marker"
+          rm -f "$archive"
+          trap - ERR
+          REMOTE_SCRIPT
+
+      - name: Verify public application
+        shell: bash
+        run: |
+          ssh -i "$HOME/.ssh/lifequest_deploy" -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "bash -s -- 'https://lifequest.develith.com/?deploy=${{ github.run_id }}-${{ github.run_attempt }}'" <<'REMOTE_SCRIPT'
+          set -Eeuo pipefail
+          curl --fail --silent --show-error --location \
+            --retry 4 --retry-delay 3 --max-time 20 "$1" \
+            | grep --fixed-strings --quiet "LifeQuest"
+          REMOTE_SCRIPT
+
+      - name: Finalize successful deployment
+        if: success()
+        shell: bash
+        run: |
+          ssh -i "$HOME/.ssh/lifequest_deploy" -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "bash -s -- '${{ github.run_id }}-${{ github.run_attempt }}'" <<'REMOTE_SCRIPT'
+          set -Eeuo pipefail
+          release_id="$1"
+          domain_root="$HOME/domains/lifequest.develith.com"
+          rm -rf "$domain_root/.previous-$release_id"
+          rm -f "$domain_root/.active-$release_id"
+          REMOTE_SCRIPT
+
+      - name: Roll back failed public deployment
+        if: failure() && steps.activate.outcome == 'success'
+        shell: bash
+        run: |
+          ssh -i "$HOME/.ssh/lifequest_deploy" -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "bash -s -- '${{ github.run_id }}-${{ github.run_attempt }}'" <<'REMOTE_SCRIPT'
+          set -Eeuo pipefail
+          release_id="$1"
+          domain_root="$HOME/domains/lifequest.develith.com"
+          live="$domain_root/public_html"
+          previous="$domain_root/.previous-$release_id"
+          failed="$domain_root/.failed-$release_id"
+          active_marker="$domain_root/.active-$release_id"
+
+          if [ -f "$active_marker" ] && [ -d "$previous" ]; then
+            mv "$live" "$failed"
+            mv "$previous" "$live"
+            rm -rf "$failed"
+            rm -f "$active_marker"
+          fi
+          REMOTE_SCRIPT
+
+      - name: Remove runner SSH key
+        if: always()
+        run: rm -f "$HOME/.ssh/lifequest_deploy"
