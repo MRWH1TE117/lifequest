@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">LifeQuest</title>
+  <desc id="desc">Personal development dashboard by Develith</desc>
+  <defs>
+    <linearGradient id="bg" x1="70" y1="30" x2="1130" y2="600" gradientUnits="userSpaceOnUse"><stop stop-color="#2b2419"/><stop offset=".45" stop-color="#17130e"/><stop offset="1" stop-color="#0e0c09"/></linearGradient>
+    <radialGradient id="gold" cx="0" cy="0" r="1" gradientTransform="translate(200 100) rotate(35) scale(520 380)" gradientUnits="userSpaceOnUse"><stop stop-color="#ddad45" stop-opacity=".24"/><stop offset="1" stop-color="#ddad45" stop-opacity="0"/></radialGradient>
+    <radialGradient id="green" cx="0" cy="0" r="1" gradientTransform="translate(1060 520) rotate(-145) scale(420 300)" gradientUnits="userSpaceOnUse"><stop stop-color="#7fa98a" stop-opacity=".16"/><stop offset="1" stop-color="#7fa98a" stop-opacity="0"/></radialGradient>
+    <linearGradient id="accent" x1="90" y1="0" x2="650" y2="0" gradientUnits="userSpaceOnUse"><stop stop-color="#f1c96f"/><stop offset="1" stop-color="#ddad45"/></linearGradient>
+    <pattern id="grid" width="58" height="58" patternUnits="userSpaceOnUse"><path d="M58 0H0V58" fill="none" stroke="#f7e7c1" stroke-opacity=".035"/></pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/><rect width="1200" height="630" fill="url(#gold)"/><rect width="1200" height="630" fill="url(#green)"/><rect width="1200" height="630" fill="url(#grid)"/>
+  <g transform="translate(92 74)">
+    <rect width="62" height="62" rx="15" fill="#ddad45"/>
+    <text x="31" y="40" text-anchor="middle" fill="#15100a" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="800">LQ</text>
+    <text x="84" y="40" fill="#c9b98f" font-family="Consolas,monospace" font-size="19" letter-spacing="2.4">DEVELITH APPLICATION</text>
+  </g>
+  <text x="92" y="275" fill="url(#accent)" font-family="Segoe UI,Arial,sans-serif" font-size="108" font-weight="750" letter-spacing="-4">LifeQuest</text>
+  <text x="98" y="346" fill="#f3ead7" font-family="Segoe UI,Arial,sans-serif" font-size="35" font-weight="600">Rozwój osobisty. Uporządkowany.</text>
+  <text x="100" y="404" fill="#a99b7b" font-family="Segoe UI,Arial,sans-serif" font-size="23">Cele · tydzień · mikroakcje · nawyki · przeglądy</text>
+  <text x="100" y="452" fill="#827760" font-family="Segoe UI,Arial,sans-serif" font-size="19">Local-first · PL / EN · dane pod Twoją kontrolą</text>
+  <g transform="translate(814 134)">
+    <rect x="0" y="0" width="294" height="346" rx="28" fill="#1e1a13" stroke="#6d5a32" stroke-width="2"/>
+    <rect x="28" y="32" width="148" height="18" rx="9" fill="#ddad45" opacity=".88"/><rect x="28" y="66" width="226" height="8" rx="4" fill="#564b36"/>
+    <g transform="translate(28 112)"><circle cx="25" cy="25" r="24" fill="none" stroke="#4f4634" stroke-width="9"/><path d="M25 1a24 24 0 0 1 22 15" fill="none" stroke="#ddad45" stroke-width="9" stroke-linecap="round"/><rect x="70" y="7" width="165" height="12" rx="6" fill="#c9b98f"/><rect x="70" y="32" width="118" height="8" rx="4" fill="#564b36"/></g>
+    <g transform="translate(28 190)"><circle cx="25" cy="25" r="24" fill="none" stroke="#4f4634" stroke-width="9"/><path d="M25 1a24 24 0 1 1-23 31" fill="none" stroke="#7fa98a" stroke-width="9" stroke-linecap="round"/><rect x="70" y="7" width="142" height="12" rx="6" fill="#c9b98f"/><rect x="70" y="32" width="178" height="8" rx="4" fill="#564b36"/></g>
+    <g transform="translate(28 268)"><rect width="238" height="46" rx="12" fill="#2a2419"/><circle cx="23" cy="23" r="8" fill="#ddad45"/><rect x="44" y="17" width="150" height="11" rx="5.5" fill="#9c8d6d"/></g>
+  </g>
+  <g transform="translate(98 536)"><circle cx="7" cy="7" r="7" fill="#7fa98a"/><text x="28" y="14" fill="#c9b98f" font-family="Consolas,monospace" font-size="18" letter-spacing="2">LIFEQUEST.DEVELITH.COM</text></g>
+</svg>
