@@ -42,6 +42,12 @@ jobs:
       - name: Build production application
         run: npm run build
 
+      - name: Verify security header configuration
+        run: |
+          test -f dist/.htaccess
+          grep --fixed-strings --quiet "Content-Security-Policy" dist/.htaccess
+          grep --fixed-strings --quiet "Strict-Transport-Security" dist/.htaccess
+
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
